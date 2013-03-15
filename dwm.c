@@ -600,7 +600,6 @@ configurerequest(XEvent *e) {
 	XConfigureRequestEvent *ev = &e->xconfigurerequest;
 	XWindowChanges wc;
 
-printf("configurerequest() %d %d %d %d\n", ev->x, ev->y, ev->width, ev->height);
 	if((c = wintoclient(ev->window))) {
 		if(ev->value_mask & CWBorderWidth)
 			c->bw = ev->border_width;
