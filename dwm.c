@@ -60,7 +60,7 @@
 enum { CurNormal, CurResize, CurMove, CurLast };        /* cursor */
 enum { ColBorder, ColFG, ColBG, ColLast };              /* color */
 enum { NetSupported, NetWMName, NetWMState, NetWMStateAbove,
-       NetWMFullscreen, NetActiveWindow, NetWMWindowType,
+       NetWMFullscreen, NetActiveWindow, NetWMWindowType, NetWMWindowsOpacity,
        NetWMWindowTypeDialog, NetClientList, NetLast };     /* EWMH atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
@@ -182,6 +182,7 @@ static void drawsquare(Bool filled, Bool empty, Bool invert, unsigned long col[C
 static void drawtext(const char *text, unsigned long col[ColLast], Bool invert);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
+static void opacity(Client *c, double opacity);
 static void focus(Client *c);
 static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
@@ -834,6 +835,18 @@ expose(XEvent *e) {
 }
 
 void
+opacity(Client *c, double opacity)
+{
+	if(opacity >= 0 && opacity <= 1) {
+		unsigned long real_opacity[] = { opacity * 0xffffffff };
+		XChangeProperty(dpy, c->win, netatom[NetWMWindowsOpacity], XA_CARDINAL,
+				32, PropModeReplace, (unsigned char *)real_opacity,
+				1);
+	} else
+		XDeleteProperty(dpy, c->win, netatom[NetWMWindowsOpacity]);
+}
+
+void
 focus(Client *c) {
 	if(!c || !ISVISIBLE(c))
 		for(c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
@@ -1113,6 +1126,7 @@ manage(Window w, XWindowAttributes *wa) {
 		die("fatal: could not malloc() %u bytes\n", sizeof(Client));
 	c->win = w;
 	updatetitle(c);
+	opacity(c, defaultopacity);
 	if(XGetTransientForHint(dpy, w, &trans) && (t = wintoclient(trans))) {
 		c->mon = t->mon;
 		c->tags = t->tags;
@@ -1623,6 +1637,7 @@ setup(void) {
 	netatom[NetWMWindowType] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
 	netatom[NetWMWindowTypeDialog] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
 	netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
+	netatom[NetWMWindowsOpacity] = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
 	/* init cursors */
 	cursor[CurNormal] = XCreateFontCursor(dpy, XC_left_ptr);
 	cursor[CurResize] = XCreateFontCursor(dpy, XC_sizing);
