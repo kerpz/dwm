@@ -1451,11 +1451,14 @@ restack(Monitor *m) {
 	XSync(dpy, False);
 	while(XCheckMaskEvent(dpy, EnterWindowMask, &ev));
 	// kerpz haxx / state above hint
-	for(c = m->stack; c; c = c->snext)
+	for(c = m->clients; c; c = c->next)
 	{
 		Atom state = getatomprop(c, netatom[NetWMState]);
 		if(state == netatom[NetWMStateAbove])
+		{
 			XRaiseWindow(dpy, c->win);
+			break; // only one should go top
+		}
 	}
 }
 
