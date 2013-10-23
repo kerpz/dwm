@@ -62,7 +62,7 @@ enum { ColBorder, ColFG, ColBG, ColLast };              /* color */
 enum { NetSupported, NetWMName, NetWMState, NetWMStateAbove,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType, NetWMWindowsOpacity,
        NetWMWindowTypeDialog, NetClientList, NetLast };     /* EWMH atoms */
-enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
+enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMChangeState, WMLast }; /* default atoms */
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
        ClkClientWin, ClkRootWin, ClkLast };             /* clicks */
 
@@ -549,6 +549,21 @@ clientmessage(XEvent *e) {
 			c->mon->tagset[c->mon->seltags] = c->tags;
 		}
 		pop(c);
+	}
+	else if(cme->message_type == wmatom[WMChangeState]) {
+		if (cme->data.l[0] == IconicState) {
+			XUnmapWindow(dpy, c->win);
+			focus(NULL);
+			//arrange(selmon);
+		}
+		else if (cme->data.l[0] == NormalState) {
+			//arrange(selmon);
+			XMapWindow(dpy, c->win);
+			focus(NULL);
+		}
+	}
+	else { // WMState
+		printf("Unknown: [0x%x]\n", cme->message_type);
 	}
 }
 
@@ -1631,6 +1646,7 @@ setup(void) {
 	wmatom[WMDelete] = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
 	wmatom[WMState] = XInternAtom(dpy, "WM_STATE", False);
 	wmatom[WMTakeFocus] = XInternAtom(dpy, "WM_TAKE_FOCUS", False);
+	wmatom[WMChangeState] = XInternAtom(dpy, "WM_CHANGE_STATE", False);
 	netatom[NetActiveWindow] = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
 	netatom[NetSupported] = XInternAtom(dpy, "_NET_SUPPORTED", False);
 	netatom[NetWMName] = XInternAtom(dpy, "_NET_WM_NAME", False);
